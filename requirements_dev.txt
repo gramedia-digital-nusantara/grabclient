@@ -11,7 +11,7 @@ pytest==3.8.2
 pytest-runner==4.2
 
 # runtime required deps
-requests==2.19.1
+requests==2.20.0
 
 # dev deps
 behave==1.2.6
