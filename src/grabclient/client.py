@@ -27,10 +27,18 @@ class GrabClient:
 
     @property
     def verify_ssl(self):
+        """
+
+        :return:
+        """
         return not self.sandbox_mode
 
     @property
     def base_url(self):
+        """
+
+        :return:
+        """
         return 'https://api.stg-myteksi.com/v1' if self.sandbox_mode else 'https://api.grab.com/v1'
 
     def check_rate(self, req: DeliveryQuoteRequest) -> DeliveryQuoteResponse:
@@ -54,9 +62,23 @@ class GrabClient:
         pass
 
     def _http_get_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
+        """
+
+        :param url_path:
+        :param payload:
+        :param response_class:
+        :return:
+        """
         return response_class
 
     def _http_post_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
+        """
+
+        :param url_path:
+        :param payload:
+        :param response_class:
+        :return:
+        """
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -66,7 +88,7 @@ class GrabClient:
         headers['Authorization'] = self.calculate_hash(data, url_path, headers, 'POST')
         try:
             http_response = requests.post(
-                f'{self.base_url}{url_path}',
+                f"{self.base_url}{url_path}",
                 headers=headers,
                 data=data
             )
@@ -79,6 +101,11 @@ class GrabClient:
             raise APIResponseNotJson from e
 
     def _marshal_request(self, payload) -> dict:
+        """
+
+        :param payload:
+        :return:
+        """
         marshalled = {}
         # 1. Skip all non-public attributes (starts with sunder or dunder)
         # 2. special case to ignore 'index' and 'count' attributes for namedtuples
@@ -96,9 +123,22 @@ class GrabClient:
         return marshalled
 
     def _serialize_request(self, payload) -> str:
+        """
+
+        :param payload:
+        :return:
+        """
         return json.dumps(self._marshal_request(payload))
 
-    def calculate_hash(self, data, url, headers, method):
+    def calculate_hash(self, data: str, url: str, headers: dict, method: str):
+        """
+
+        :param data:
+        :param url:
+        :param headers:
+        :param method:
+        :return:
+        """
         client_id, secret = self.credentials
 
         h = hashlib.sha256()
@@ -107,6 +147,6 @@ class GrabClient:
             'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()) + '\n'
 
         hmac_signature = hmac.new(secret, string_to_sign, hashlib.sha256).digest()
-        hmac_signature_encoded = base64.b64encode(hmac_signature)
+        hmac_signature_encoded: object = base64.b64encode(hmac_signature)
 
         return f'{client_id}:{hmac_signature_encoded}'
