@@ -4,10 +4,10 @@ Feature: Rate Checking
     Scenario: Request Serialization
         Given a simulated DeliveryQuoteRequest request
         When I serialize the request
-        Then the request is serialized correctly for /deliveries/quote
+        Then the request is serialized correctly for /deliveries/quotes
 
     Scenario: Response Deserialization
-        Given a simulated response from /deliveries/quote
+        Given a simulated response from /deliveries/quotes
         And a simulated DeliveryQuoteRequest request
         When I deserialize the response as DeliveryQuoteResponse
         Then the response is deserialized correctly for a DeliveryQuote
