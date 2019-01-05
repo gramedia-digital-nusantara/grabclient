@@ -123,4 +123,7 @@ class CashOnDelivery(NamedTuple):
     amount: int = 0
 
 
+# class DeliveryId(NamedTuple):
+#     delivery_id:
+
 

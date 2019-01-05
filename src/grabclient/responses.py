@@ -37,3 +37,15 @@ class DeliveryQuoteResponse(AbstractDeserializableResponse):
             origin=api_json.get('origin'),
             destination=api_json.get('destination')
         )
+
+
+# class ScheduleDeliveryResponse(AbstractDeserializableResponse):
+#     __slots__ = (
+#         'delivery_id', 'merchant_order_d',
+#         'quote', 'sender', 'recipient',
+#         'pickup_pin', 'status', 'courier', 'timeline',
+#         'tracking_url', 'source_info'
+#     )
+#
+#     def __init__(self,
+#                  delivery_id: str):

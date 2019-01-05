@@ -1,9 +1,21 @@
+from abc import ABCMeta, abstractmethod
 from typing import List
 
 from grabclient.common import Origin, Package, Destination, ServiceType, CashOnDelivery, Sender, Recipient
 
+class AbstractDeserializableRequest(metaclass=ABCMeta):
+    """ Essentially the base class for all API responses.  This just defines __slots__
+    and ensures that all derived classes need to define a from_api_json class method.
+    """
+    __slots__ = ()
 
-class DeliveryQuoteRequest:
+    @classmethod
+    @abstractmethod
+    def to_api_json(cls):
+        pass
+
+
+class DeliveryQuoteRequest(AbstractDeserializableRequest):
     __slots__ = (
         'packages', 'origin', 'destination'
     )
@@ -16,8 +28,16 @@ class DeliveryQuoteRequest:
         self.destination = destination
         self.packages = packages
 
+    @classmethod
+    def to_api_json(cls):
+        return cls(
+            origin=cls.origin,
+            destination=cls.destination,
+            packages=cls.packages
+        )
 
-class DeliveryRequest:
+
+class ScheduleDeliveryRequest:
     __slots__ = (
         'merchant_order_id',
         'service_type',

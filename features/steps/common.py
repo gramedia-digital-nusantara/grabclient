@@ -200,3 +200,20 @@ def dict_diff(first, second):
         if not key in first:
             diff[key] = (KEYNOTFOUND, second[key])
     return diff
+
+
+@then('the response is properly deserialized')
+def step_impl(context: Context):
+    response = context.response
+
+@then('the request is a {method} made to {url}')
+def step_impl(context: Context, method: str, url: str) -> None:
+    call = context.requests_mock.post.call_args
+    assert call[0][0] == url
+
+
+# @then('the request credentials are set properly')
+# def step_impl(context: Context):
+#     call = context.requests_mock.post.call_args
+#     auth = call[1]['auth']
+#     assert ('my_username', 'my_password') == auth

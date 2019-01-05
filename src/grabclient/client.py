@@ -144,9 +144,9 @@ class GrabClient:
         h = hashlib.sha256()
         h.update(data.encode('ascii'))
         string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
-            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()) + '\n'
+            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
 
-        hmac_signature = hmac.new(secret, string_to_sign, hashlib.sha256).digest()
+        hmac_signature = hmac.new(secret.encode(), string_to_sign.encode(), hashlib.sha256).digest()
         hmac_signature_encoded: object = base64.b64encode(hmac_signature)
 
         return f'{client_id}:{hmac_signature_encoded}'

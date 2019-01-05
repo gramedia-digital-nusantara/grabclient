@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from behave import given, when, then
@@ -41,6 +42,7 @@ def step_impl(context):
     mock.json = lambda: context.simulated_json
 
     context.requests_mock.post.return_value = mock
+    context.requests_mock.post.return_value.status_code = HTTPStatus.OK
 
     context.response = client.check_rate(
         DeliveryQuoteRequest(
