@@ -1,3 +1,6 @@
+import base64
+import hashlib
+import hmac
 import json
 from enum import Enum
 from unittest.mock import MagicMock
@@ -212,8 +215,16 @@ def step_impl(context: Context, method: str, url: str) -> None:
     assert call[0][0] == url
 
 
-# @then('the request credentials are set properly')
-# def step_impl(context: Context):
-#     call = context.requests_mock.post.call_args
-#     auth = call[1]['auth']
-#     assert ('my_username', 'my_password') == auth
+@then('the request credentials for {method} mode are set properly to {url}')
+def step_impl(context: Context, method:str, url: str) -> None:
+    call = context.requests_mock.post.call_args
+    headers = call[1]['headers']
+    auth = headers['Authorization']
+    h = hashlib.sha256()
+    h.update(call[1]['data'].encode('ascii'))
+    string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
+        'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
+
+    hmac_signature = hmac.new('secret'.encode(), string_to_sign.encode(), hashlib.sha256).digest()
+    hmac_signature_encoded: object = base64.b64encode(hmac_signature)
+    assert f'client_id:{hmac_signature_encoded}' == auth

@@ -17,5 +17,5 @@ Feature: Rate Checking
         And a simulated response from /deliveries/quotes
         When I perform a rate lookup
         Then the request is a POST made to https://api.grab.com/v1/deliveries/quotes
-#        And the request credentials are set properly
+        And the request credentials for POST mode are set properly to /deliveries/quotes
         And the response is deserialized correctly for a DeliveryQuote
