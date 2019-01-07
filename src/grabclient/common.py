@@ -84,7 +84,7 @@ class EstimatedTimeline(NamedTuple):
     returns: str
 
 
-class Quote(NamedTuple):
+class QuoteParam(NamedTuple):
     service: Service
     currency: Currency
     amount: int
@@ -92,11 +92,11 @@ class Quote(NamedTuple):
     distance: int
 
 
-QuoteList = List[Quote]
+QuoteList = List[QuoteParam]
 
 
 class Quotes(NamedTuple):
-    quotes: List[Quote]
+    quotes: List[QuoteParam]
     packages: List[Package]
 
 
@@ -123,4 +123,35 @@ class CashOnDelivery(NamedTuple):
     amount: int = 0
 
 
+class Vehicle(NamedTuple):
+    plate_number: str
+    model: str
 
+
+class StatusType(Enum):
+    allocating = "ALLOCATING"
+    picking_up = "PICKING_UP"
+    in_delivery = "IN_DELIVERY"
+    in_return = "IN_RETURN"
+    completed = "COMPLETED"
+    cancelled = "CANCELED"
+    returned = "RETURNED"
+    failed = "FAILED"
+
+
+class AdvancedInfo(NamedTuple):
+    failed_reason: str
+
+
+class Quote(QuoteParam):
+    packages: List[Package]
+    origin: Origin
+    destination: Destination
+
+
+class Courier(NamedTuple):
+    coordinates: Coordinates
+    name: str
+    phone: str
+    picture_url: str
+    vehicle: Vehicle

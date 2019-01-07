@@ -11,8 +11,9 @@ from typing import Tuple, Union, TypeVar, Type
 import requests
 
 from grabclient.exceptions import APINotContactable, APIResponseNotJson, APIErrorResponse
-from grabclient.requests import DeliveryQuoteRequest
-from grabclient.responses import DeliveryQuoteResponse
+from grabclient.helper import snake_to_camel
+from grabclient.requests import DeliveryQuoteRequest, DeliveryRequest
+from grabclient.responses import DeliveryQuoteResponse, DeliveryResponse
 
 __all__ = ['GrabClient', ]
 
@@ -45,9 +46,9 @@ class GrabClient:
         """POST /deliveries/quotes"""
         return self._http_post_json('/deliveries/quote', req, DeliveryQuoteResponse)
 
-    def book_delivery(self):
+    def book_delivery(self, req: DeliveryRequest) -> DeliveryResponse:
         """Booking API: POST /deliveries"""
-        pass
+        return self._http_post_json('/deliveries', req, DeliveryResponse)
 
     def track_delivery(self):
         """Tracking API: GET /deliveries/{deliveryID}/tracking tyg"""
@@ -95,6 +96,8 @@ class GrabClient:
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
+        except Exception as e:
+            raise Exception from e
         except requests.RequestException as e:
             raise APINotContactable from e
         except ValueError as e:
@@ -112,14 +115,15 @@ class GrabClient:
         for attr_name in [a for a in dir(payload)
                           if not a.startswith('_') and a not in ('index', 'count')]:
             attr_val = getattr(payload, attr_name)
+            cameled_attr_name = snake_to_camel(attr_name)
             if isinstance(attr_val, datetime):
-                marshalled[attr_name] = int(attr_val.timestamp())
-            elif isinstance(attr_val, Enum):
-                marshalled[attr_name] = attr_val.value
+                marshalled[cameled_attr_name] = int(attr_val.timestamp())
+            elif isinstance(cameled_attr_name, Enum):
+                marshalled[cameled_attr_name] = attr_val.value
             elif isinstance(attr_val, (int, str, bool, float)):
-                marshalled[attr_name] = attr_val
+                marshalled[cameled_attr_name] = attr_val
             else:
-                marshalled[attr_name] = self._marshal_request(attr_val)
+                marshalled[cameled_attr_name] = self._marshal_request(attr_val)
         return marshalled
 
     def _serialize_request(self, payload) -> str:
@@ -144,9 +148,9 @@ class GrabClient:
         h = hashlib.sha256()
         h.update(data.encode('ascii'))
         string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
-            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()) + '\n'
+            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
 
-        hmac_signature = hmac.new(secret, string_to_sign, hashlib.sha256).digest()
+        hmac_signature = hmac.new(secret.encode(), string_to_sign.encode(), hashlib.sha256).digest()
         hmac_signature_encoded: object = base64.b64encode(hmac_signature)
 
         return f'{client_id}:{hmac_signature_encoded}'
