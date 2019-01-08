@@ -58,9 +58,9 @@ class GrabClient:
         """Cancel API: /deliveries/{deliveryID}"""
         pass
 
-    def info_delivery(self):
+    def info_delivery(self, delivery_id: str) -> DeliveryResponse:
         """GET deliveries/{DeliveryID}"""
-        pass
+        return self._http_get(f'/deliveries/{delivery_id}', DeliveryResponse)
 
     def _http_get_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
         """
@@ -72,6 +72,36 @@ class GrabClient:
         """
         return response_class
 
+    def _headers(self):
+        return {
+            'Accept': 'application/json',
+            'Date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        }
+
+    def _http_get(self, url_path: str, response_class: Type[T]) -> T:
+        """
+        :param url_path:
+        :param response_class:
+        :return:
+        """
+        headers = self._headers()
+        headers['Content-Type'] = ""
+        headers['Authorization'] = self.calculate_hash('', url_path, headers, 'GET')
+        try:
+            http_response = requests.get(
+                f"{self.base_url}{url_path}",
+                headers=headers
+            )
+            if http_response.status_code is not HTTPStatus.OK:
+                raise APIErrorResponse.from_api_json(http_response=http_response)
+            return response_class.from_api_json(http_response.json())
+        except Exception as e:
+            raise Exception from e
+        except requests.RequestException as e:
+            raise APINotContactable from e
+        except ValueError as e:
+            raise APIResponseNotJson from e
+
     def _http_post_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
         """
 
@@ -80,11 +110,8 @@ class GrabClient:
         :param response_class:
         :return:
         """
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
-        }
+        headers = self._headers()
+        headers['Content-Type'] = 'application/json'
         data = self._serialize_request(payload)
         headers['Authorization'] = self.calculate_hash(data, url_path, headers, 'POST')
         try:
@@ -96,8 +123,6 @@ class GrabClient:
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
-        except Exception as e:
-            raise Exception from e
         except requests.RequestException as e:
             raise APINotContactable from e
         except ValueError as e:

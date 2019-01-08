@@ -41,13 +41,6 @@ def step_impl(context):
     )
 
 
-@then("the response is deserialized correctly for a DeliveryResponse")
-def step_impl(context: Context):
-    assert context.response.delivery_id == 'string'
-    assert context.response.merchant_order_id == 'string'
-    assert context.response.tracking_url == 'string'
-
-
 @when("I perform book delivery")
 def step_impl(context):
     client: GrabClient = context.client

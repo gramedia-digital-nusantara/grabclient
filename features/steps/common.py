@@ -296,6 +296,112 @@ SIMULATED_JSON = {
                 "failedReason": "string"
             }
         }
+    },
+    '/deliveries/string': {
+        SimulationType.response: {
+            "deliveryID": "string",
+            "merchantOrderID": "string",
+            "quote": {
+                "service": {
+                    "id": 0,
+                    "name": "string"
+                },
+                "currency": {
+                    "code": "SGD",
+                    "symbol": "string",
+                    "exponent": 0
+                },
+                "amount": 0,
+                "estimatedTimeline": {
+                    "create": "string",
+                    "allocate": "string",
+                    "pickup": "string",
+                    "dropoff": "string",
+                    "cancel": "string",
+                    "return": "string"
+                },
+                "distance": 0,
+                "packages": [
+                    {
+                        "name": "string",
+                        "description": "string",
+                        "quantity": 0,
+                        "price": 0,
+                        "dimensions": {
+                            "height": 0,
+                            "width": 0,
+                            "depth": 0,
+                            "weight": 0
+                        }
+                    }
+                ],
+                "origin": {
+                    "address": "string",
+                    "keywords": "string",
+                    "coordinates": {
+                        "latitude": 0,
+                        "longitude": 0
+                    },
+                    "extra": {}
+                },
+                "destination": {
+                    "address": "string",
+                    "keywords": "string",
+                    "coordinates": {
+                        "latitude": 0,
+                        "longitude": 0
+                    },
+                    "extra": {}
+                }
+            },
+            "sender": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "recipient": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "pickupPin": "string",
+            "status": "ALLOCATING",
+            "courier": {
+                "coordinates": {
+                    "latitude": 0,
+                    "longitude": 0
+                },
+                "name": "string",
+                "phone": "string",
+                "pictureURL": "string",
+                "vehicle": {
+                    "plateNumber": "string",
+                    "model": "string"
+                }
+            },
+            "timeline": {
+                "create": "string",
+                "allocate": "string",
+                "pickup": "string",
+                "dropoff": "string",
+                "cancel": "string",
+                "return": "string"
+            },
+            "trackingURL": "string",
+            "advanceInfo": {
+                "failedReason": "string"
+            }
+        }
     }
 }
 
@@ -377,11 +483,14 @@ def dict_diff(first, second):
 
 @then('the request credentials for {method} mode are set properly to {url}')
 def step_impl(context: Context, method: str, url: str) -> None:
-    call = context.requests_mock.post.call_args
+    if method == "POST":
+        call = context.requests_mock.post.call_args
+    else:
+        call = context.requests_mock.get.call_args
     headers = call[1]['headers']
     auth = headers['Authorization']
     h = hashlib.sha256()
-    h.update(call[1]['data'].encode('ascii'))
+    h.update(call[1].get('data', '').encode('ascii'))
     string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
         'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
 
@@ -404,8 +513,15 @@ def step_impl(context: Context):
 
 @then('the request is a {method} made to {url}')
 def step_impl(context: Context, method: str, url: str) -> None:
-    call = context.requests_mock.post.call_args
+    if method == "POST":
+        call = context.requests_mock.post.call_args
+    else:
+        call = context.requests_mock.get.call_args
     assert call[0][0] == url
 
 
-
+@then("the response is deserialized correctly for a DeliveryResponse")
+def step_impl(context: Context):
+    assert context.response.delivery_id == 'string'
+    assert context.response.merchant_order_id == 'string'
+    assert context.response.tracking_url == 'string'
