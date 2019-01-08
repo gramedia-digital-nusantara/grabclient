@@ -44,7 +44,7 @@ class GrabClient:
 
     def check_rate(self, req: DeliveryQuoteRequest) -> DeliveryQuoteResponse:
         """POST /deliveries/quotes"""
-        return self._http_post_json('/deliveries/quote', req, DeliveryQuoteResponse)
+        return self._http_post_json('/deliveries/quotes', req, DeliveryQuoteResponse)
 
     def book_delivery(self, req: DeliveryRequest) -> DeliveryResponse:
         """Booking API: POST /deliveries"""

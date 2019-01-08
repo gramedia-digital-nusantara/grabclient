@@ -21,7 +21,7 @@ class SimulationType(Enum):
 
 
 SIMULATED_JSON = {
-    '/deliveries/quote': {
+    '/deliveries/quotes': {
         SimulationType.response: {
             "quotes": [
                 {
