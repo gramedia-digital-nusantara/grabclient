@@ -54,23 +54,13 @@ class GrabClient:
         """Tracking API: GET /deliveries/{deliveryID}/tracking tyg"""
         pass
 
-    def cancel_delivery(self):
+    def cancel_delivery(self, delivery_id: str):
         """Cancel API: /deliveries/{deliveryID}"""
-        pass
+        return self._http_delete_json(f'/deliveries/{delivery_id}')
 
     def info_delivery(self, delivery_id: str) -> DeliveryResponse:
         """GET deliveries/{DeliveryID}"""
-        return self._http_get(f'/deliveries/{delivery_id}', DeliveryResponse)
-
-    def _http_get_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
-        """
-
-        :param url_path:
-        :param payload:
-        :param response_class:
-        :return:
-        """
-        return response_class
+        return self._http_get_json(f'/deliveries/{delivery_id}', DeliveryResponse)
 
     def _headers(self):
         return {
@@ -78,7 +68,7 @@ class GrabClient:
             'Date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
         }
 
-    def _http_get(self, url_path: str, response_class: Type[T]) -> T:
+    def _http_get_json(self, url_path: str, response_class: Type[T]) -> T:
         """
         :param url_path:
         :param response_class:
@@ -123,6 +113,30 @@ class GrabClient:
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
+        except requests.RequestException as e:
+            raise APINotContactable from e
+        except ValueError as e:
+            raise APIResponseNotJson from e
+
+    def _http_delete_json(self, url_path: str):
+        """
+        :param url_path:
+        :param response_class:
+        :return:
+        """
+        headers = self._headers()
+        headers['Content-Type'] = ""
+        headers['Authorization'] = self.calculate_hash('', url_path, headers, 'DELETE')
+        try:
+            http_response = requests.delete(
+                f"{self.base_url}{url_path}",
+                headers=headers
+            )
+            if http_response.status_code is not HTTPStatus.NO_CONTENT:
+                raise APIErrorResponse.from_api_json(http_response=http_response)
+            return http_response
+        except Exception as e:
+            raise Exception from e
         except requests.RequestException as e:
             raise APINotContactable from e
         except ValueError as e:
