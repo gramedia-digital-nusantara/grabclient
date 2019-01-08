@@ -19,10 +19,3 @@ def step_impl(context):
                                 keywords='Extra keywords',
                                 coordinates=Coordinates(latitude=1.1, longitude=1.2))
     )
-
-
-@when('I serialize the request')
-def step_impl(context):
-    c = GrabClient(('client_id', 'secret'), False)
-    context.serialized_request = c._serialize_request(
-        context.simulated_request)
