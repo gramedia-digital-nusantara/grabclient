@@ -11,8 +11,9 @@ from typing import Tuple, Union, TypeVar, Type
 import requests
 
 from grabclient.exceptions import APINotContactable, APIResponseNotJson, APIErrorResponse
-from grabclient.requests import DeliveryQuoteRequest
-from grabclient.responses import DeliveryQuoteResponse
+from grabclient.helper import snake_to_camel
+from grabclient.requests import DeliveryQuoteRequest, DeliveryRequest
+from grabclient.responses import DeliveryQuoteResponse, DeliveryResponse
 
 __all__ = ['GrabClient', ]
 
@@ -43,33 +44,53 @@ class GrabClient:
 
     def check_rate(self, req: DeliveryQuoteRequest) -> DeliveryQuoteResponse:
         """POST /deliveries/quotes"""
-        return self._http_post_json('/deliveries/quote', req, DeliveryQuoteResponse)
+        return self._http_post_json('/deliveries/quotes', req, DeliveryQuoteResponse)
 
-    def book_delivery(self):
+    def book_delivery(self, req: DeliveryRequest) -> DeliveryResponse:
         """Booking API: POST /deliveries"""
-        pass
+        return self._http_post_json('/deliveries', req, DeliveryResponse)
 
     def track_delivery(self):
         """Tracking API: GET /deliveries/{deliveryID}/tracking tyg"""
         pass
 
-    def cancel_delivery(self):
+    def cancel_delivery(self, delivery_id: str):
         """Cancel API: /deliveries/{deliveryID}"""
-        pass
+        return self._http_delete_json(f'/deliveries/{delivery_id}')
 
-    def info_delivery(self):
+    def info_delivery(self, delivery_id: str) -> DeliveryResponse:
         """GET deliveries/{DeliveryID}"""
-        pass
+        return self._http_get_json(f'/deliveries/{delivery_id}', DeliveryResponse)
 
-    def _http_get_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
+    def _headers(self):
+        return {
+            'Accept': 'application/json',
+            'Date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        }
+
+    def _http_get_json(self, url_path: str, response_class: Type[T]) -> T:
         """
-
         :param url_path:
-        :param payload:
         :param response_class:
         :return:
         """
-        return response_class
+        headers = self._headers()
+        headers['Content-Type'] = ""
+        headers['Authorization'] = self.calculate_hash('', url_path, headers, 'GET')
+        try:
+            http_response = requests.get(
+                f"{self.base_url}{url_path}",
+                headers=headers
+            )
+            if http_response.status_code is not HTTPStatus.OK:
+                raise APIErrorResponse.from_api_json(http_response=http_response)
+            return response_class.from_api_json(http_response.json())
+        except Exception as e:
+            raise Exception from e
+        except requests.RequestException as e:
+            raise APINotContactable from e
+        except ValueError as e:
+            raise APIResponseNotJson from e
 
     def _http_post_json(self, url_path: str, payload: Union[dict, namedtuple], response_class: Type[T]) -> T:
         """
@@ -79,11 +100,8 @@ class GrabClient:
         :param response_class:
         :return:
         """
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
-        }
+        headers = self._headers()
+        headers['Content-Type'] = 'application/json'
         data = self._serialize_request(payload)
         headers['Authorization'] = self.calculate_hash(data, url_path, headers, 'POST')
         try:
@@ -95,6 +113,30 @@ class GrabClient:
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
+        except requests.RequestException as e:
+            raise APINotContactable from e
+        except ValueError as e:
+            raise APIResponseNotJson from e
+
+    def _http_delete_json(self, url_path: str):
+        """
+        :param url_path:
+        :param response_class:
+        :return:
+        """
+        headers = self._headers()
+        headers['Content-Type'] = ""
+        headers['Authorization'] = self.calculate_hash('', url_path, headers, 'DELETE')
+        try:
+            http_response = requests.delete(
+                f"{self.base_url}{url_path}",
+                headers=headers
+            )
+            if http_response.status_code is not HTTPStatus.NO_CONTENT:
+                raise APIErrorResponse.from_api_json(http_response=http_response)
+            return http_response
+        except Exception as e:
+            raise Exception from e
         except requests.RequestException as e:
             raise APINotContactable from e
         except ValueError as e:
@@ -112,14 +154,15 @@ class GrabClient:
         for attr_name in [a for a in dir(payload)
                           if not a.startswith('_') and a not in ('index', 'count')]:
             attr_val = getattr(payload, attr_name)
+            cameled_attr_name = snake_to_camel(attr_name)
             if isinstance(attr_val, datetime):
-                marshalled[attr_name] = int(attr_val.timestamp())
-            elif isinstance(attr_val, Enum):
-                marshalled[attr_name] = attr_val.value
+                marshalled[cameled_attr_name] = int(attr_val.timestamp())
+            elif isinstance(cameled_attr_name, Enum):
+                marshalled[cameled_attr_name] = attr_val.value
             elif isinstance(attr_val, (int, str, bool, float)):
-                marshalled[attr_name] = attr_val
+                marshalled[cameled_attr_name] = attr_val
             else:
-                marshalled[attr_name] = self._marshal_request(attr_val)
+                marshalled[cameled_attr_name] = self._marshal_request(attr_val)
         return marshalled
 
     def _serialize_request(self, payload) -> str:
@@ -144,9 +187,9 @@ class GrabClient:
         h = hashlib.sha256()
         h.update(data.encode('ascii'))
         string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
-            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()) + '\n'
+            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
 
-        hmac_signature = hmac.new(secret, string_to_sign, hashlib.sha256).digest()
+        hmac_signature = hmac.new(secret.encode(), string_to_sign.encode(), hashlib.sha256).digest()
         hmac_signature_encoded: object = base64.b64encode(hmac_signature)
 
         return f'{client_id}:{hmac_signature_encoded}'

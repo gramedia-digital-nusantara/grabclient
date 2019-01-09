@@ -1,5 +1,9 @@
+import base64
+import hashlib
+import hmac
 import json
 from enum import Enum
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from behave import given, when, then
@@ -8,7 +12,7 @@ from requests import Response
 
 from grabclient import GrabClient
 from grabclient.exceptions import APIErrorResponse
-from grabclient.responses import AbstractDeserializableResponse, DeliveryQuoteResponse
+from grabclient.responses import AbstractDeserializableResponse, DeliveryQuoteResponse, DeliveryResponse
 
 
 class SimulationType(Enum):
@@ -17,7 +21,7 @@ class SimulationType(Enum):
 
 
 SIMULATED_JSON = {
-    '/deliveries/quote': {
+    '/deliveries/quotes': {
         SimulationType.response: {
             "quotes": [
                 {
@@ -123,6 +127,281 @@ SIMULATED_JSON = {
                 "extra": {}
             }
         }
+    },
+    '/deliveries': {
+        SimulationType.request: {
+            "merchantOrderID": "string",
+            "serviceType": "INSTANT",
+            "packages": [
+                {
+                    "name": "string",
+                    "description": "string",
+                    "quantity": 0,
+                    "price": 0,
+                    "dimensions": {
+                        "height": 0,
+                        "width": 0,
+                        "depth": 0,
+                        "weight": 0
+                    }
+                }
+            ],
+            "cashOnDelivery": {
+                "amount": 0
+            },
+            "sender": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "recipient": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "origin": {
+                "address": "string",
+                "keywords": "string",
+                "coordinates": {
+                    "latitude": 0,
+                    "longitude": 0
+                },
+                "extra": {
+
+                }
+            },
+            "destination": {
+                "address": "string",
+                "keywords": "string",
+                "coordinates": {
+                    "latitude": 0,
+                    "longitude": 0
+                },
+                "extra": {
+
+                }
+            }
+        },
+        SimulationType.response: {
+            "deliveryID": "string",
+            "merchantOrderID": "string",
+            "quote": {
+                "service": {
+                    "id": 0,
+                    "name": "string"
+                },
+                "currency": {
+                    "code": "SGD",
+                    "symbol": "string",
+                    "exponent": 0
+                },
+                "amount": 0,
+                "estimatedTimeline": {
+                    "create": "string",
+                    "allocate": "string",
+                    "pickup": "string",
+                    "dropoff": "string",
+                    "cancel": "string",
+                    "return": "string"
+                },
+                "distance": 0,
+                "packages": [
+                    {
+                        "name": "string",
+                        "description": "string",
+                        "quantity": 0,
+                        "price": 0,
+                        "dimensions": {
+                            "height": 0,
+                            "width": 0,
+                            "depth": 0,
+                            "weight": 0
+                        }
+                    }
+                ],
+                "origin": {
+                    "address": "string",
+                    "keywords": "string",
+                    "coordinates": {
+                        "latitude": 0,
+                        "longitude": 0
+                    },
+                    "extra": {}
+                },
+                "destination": {
+                    "address": "string",
+                    "keywords": "string",
+                    "coordinates": {
+                        "latitude": 0,
+                        "longitude": 0
+                    },
+                    "extra": {}
+                }
+            },
+            "sender": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "recipient": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "pickupPin": "string",
+            "status": "ALLOCATING",
+            "courier": {
+                "coordinates": {
+                    "latitude": 0,
+                    "longitude": 0
+                },
+                "name": "string",
+                "phone": "string",
+                "pictureURL": "string",
+                "vehicle": {
+                    "plateNumber": "string",
+                    "model": "string"
+                }
+            },
+            "timeline": {
+                "create": "string",
+                "allocate": "string",
+                "pickup": "string",
+                "dropoff": "string",
+                "cancel": "string",
+                "return": "string"
+            },
+            "trackingURL": "string",
+            "advanceInfo": {
+                "failedReason": "string"
+            }
+        }
+    },
+    '/deliveries/string': {
+        SimulationType.response: {
+            "deliveryID": "string",
+            "merchantOrderID": "string",
+            "quote": {
+                "service": {
+                    "id": 0,
+                    "name": "string"
+                },
+                "currency": {
+                    "code": "SGD",
+                    "symbol": "string",
+                    "exponent": 0
+                },
+                "amount": 0,
+                "estimatedTimeline": {
+                    "create": "string",
+                    "allocate": "string",
+                    "pickup": "string",
+                    "dropoff": "string",
+                    "cancel": "string",
+                    "return": "string"
+                },
+                "distance": 0,
+                "packages": [
+                    {
+                        "name": "string",
+                        "description": "string",
+                        "quantity": 0,
+                        "price": 0,
+                        "dimensions": {
+                            "height": 0,
+                            "width": 0,
+                            "depth": 0,
+                            "weight": 0
+                        }
+                    }
+                ],
+                "origin": {
+                    "address": "string",
+                    "keywords": "string",
+                    "coordinates": {
+                        "latitude": 0,
+                        "longitude": 0
+                    },
+                    "extra": {}
+                },
+                "destination": {
+                    "address": "string",
+                    "keywords": "string",
+                    "coordinates": {
+                        "latitude": 0,
+                        "longitude": 0
+                    },
+                    "extra": {}
+                }
+            },
+            "sender": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "recipient": {
+                "firstName": "string",
+                "lastName": "string",
+                "title": "string",
+                "companyName": "string",
+                "email": "string",
+                "phone": "string",
+                "smsEnabled": True,
+                "instruction": "string"
+            },
+            "pickupPin": "string",
+            "status": "ALLOCATING",
+            "courier": {
+                "coordinates": {
+                    "latitude": 0,
+                    "longitude": 0
+                },
+                "name": "string",
+                "phone": "string",
+                "pictureURL": "string",
+                "vehicle": {
+                    "plateNumber": "string",
+                    "model": "string"
+                }
+            },
+            "timeline": {
+                "create": "string",
+                "allocate": "string",
+                "pickup": "string",
+                "dropoff": "string",
+                "cancel": "string",
+                "return": "string"
+            },
+            "trackingURL": "string",
+            "advanceInfo": {
+                "failedReason": "string"
+            }
+        }
     }
 }
 
@@ -171,7 +450,7 @@ def step_impl(context: Context, class_name: str) -> None:
     try:
         cls: AbstractDeserializableResponse = {
             'DeliveryQuoteResponse': DeliveryQuoteResponse,
-            # 'DeliveryScheduledResponse': DeliveryScheduledResponse,
+            'DeliveryResponse': DeliveryResponse,
         }[class_name]
         context.response = cls.from_api_json(context.simulated_json)
     except KeyError:
@@ -200,3 +479,49 @@ def dict_diff(first, second):
         if not key in first:
             diff[key] = (KEYNOTFOUND, second[key])
     return diff
+
+
+@then('the request credentials for {method} mode are set properly to {url}')
+def step_impl(context: Context, method: str, url: str) -> None:
+    if method == "POST":
+        call = context.requests_mock.post.call_args
+    else:
+        call = context.requests_mock.get.call_args
+    headers = call[1]['headers']
+    auth = headers['Authorization']
+    h = hashlib.sha256()
+    h.update(call[1].get('data', '').encode('ascii'))
+    string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
+        'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
+
+    hmac_signature = hmac.new('secret'.encode(), string_to_sign.encode(), hashlib.sha256).digest()
+    hmac_signature_encoded: object = base64.b64encode(hmac_signature)
+    assert f'client_id:{hmac_signature_encoded}' == auth
+
+
+@when('I serialize the request')
+def step_impl(context):
+    c = GrabClient(('client_id', 'secret'), False)
+    context.serialized_request = c._serialize_request(
+        context.simulated_request)
+
+
+@then('the response is properly deserialized')
+def step_impl(context: Context):
+    response = context.response
+
+
+@then('the request is a {method} made to {url}')
+def step_impl(context: Context, method: str, url: str) -> None:
+    if method == "POST":
+        call = context.requests_mock.post.call_args
+    else:
+        call = context.requests_mock.get.call_args
+    assert call[0][0] == url
+
+
+@then("the response is deserialized correctly for a DeliveryResponse")
+def step_impl(context: Context):
+    assert context.response.delivery_id == 'string'
+    assert context.response.merchant_order_id == 'string'
+    assert context.response.tracking_url == 'string'
