@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from http import HTTPStatus
 from json import JSONDecodeError
@@ -66,7 +67,9 @@ class APIErrorResponse(GrabClientExceptionBase):
         mapped_exception = HTTPStatusMap.get(http_response.status_code, None)
         if mapped_exception:
             try:
-                message = http_response.json().message()
+                message = json.loads(
+                    http_response.content.decode('utf-8')
+                ).get('message', '')
             except JSONDecodeError as e:
                 message = ''
             return cls(
