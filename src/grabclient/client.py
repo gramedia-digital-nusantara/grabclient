@@ -29,7 +29,6 @@ class GrabClient:
     @property
     def verify_ssl(self):
         """
-
         :return:
         """
         return not self.sandbox_mode
@@ -40,15 +39,15 @@ class GrabClient:
 
         :return:
         """
-        return 'https://api.stg-myteksi.com/v1' if self.sandbox_mode else 'https://api.grab.com/v1'
+        return 'https://api.stg-myteksi.com' if self.sandbox_mode else 'https://api.grab.com'
 
     def check_rate(self, req: DeliveryQuoteRequest) -> DeliveryQuoteResponse:
         """POST /deliveries/quotes"""
-        return self._http_post_json('/deliveries/quotes', req, DeliveryQuoteResponse)
+        return self._http_post_json('/v1/deliveries/quotes', req, DeliveryQuoteResponse)
 
     def book_delivery(self, req: DeliveryRequest) -> DeliveryResponse:
         """Booking API: POST /deliveries"""
-        return self._http_post_json('/deliveries', req, DeliveryResponse)
+        return self._http_post_json('/v1/deliveries', req, DeliveryResponse)
 
     def track_delivery(self):
         """Tracking API: GET /deliveries/{deliveryID}/tracking tyg"""
@@ -56,15 +55,14 @@ class GrabClient:
 
     def cancel_delivery(self, delivery_id: str):
         """Cancel API: /deliveries/{deliveryID}"""
-        return self._http_delete_json(f'/deliveries/{delivery_id}')
+        return self._http_delete_json(f'/v1/deliveries/{delivery_id}')
 
     def info_delivery(self, delivery_id: str) -> DeliveryResponse:
         """GET deliveries/{DeliveryID}"""
-        return self._http_get_json(f'/deliveries/{delivery_id}', DeliveryResponse)
+        return self._http_get_json(f'/v1/deliveries/{delivery_id}', DeliveryResponse)
 
     def _headers(self):
         return {
-            'Accept': 'application/json',
             'Date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
         }
 
@@ -110,7 +108,7 @@ class GrabClient:
                 headers=headers,
                 data=data
             )
-            if http_response.status_code is not HTTPStatus.OK:
+            if http_response.status_code != HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
         except requests.RequestException as e:
@@ -144,30 +142,36 @@ class GrabClient:
 
     def _marshal_request(self, payload) -> dict:
         """
-
         :param payload:
         :return:
         """
         marshalled = {}
         # 1. Skip all non-public attributes (starts with sunder or dunder)
         # 2. special case to ignore 'index' and 'count' attributes for namedtuples
-        for attr_name in [a for a in dir(payload)
-                          if not a.startswith('_') and a not in ('index', 'count')]:
+        if isinstance(payload, dict):
+            fields = payload.keys()
+        else:
+            if len(getattr(payload, '__slots__')) > 0:
+                fields = getattr(payload, '__slots__')
+            else:
+                fields = getattr(payload, '_fields')
+        for attr_name in fields:
             attr_val = getattr(payload, attr_name)
             cameled_attr_name = snake_to_camel(attr_name)
             if isinstance(attr_val, datetime):
                 marshalled[cameled_attr_name] = int(attr_val.timestamp())
-            elif isinstance(cameled_attr_name, Enum):
+            elif isinstance(attr_val, Enum):
                 marshalled[cameled_attr_name] = attr_val.value
             elif isinstance(attr_val, (int, str, bool, float)):
                 marshalled[cameled_attr_name] = attr_val
+            elif isinstance(attr_val, list):
+                marshalled[cameled_attr_name] = [self._marshal_request(element) for element in attr_val]
             else:
                 marshalled[cameled_attr_name] = self._marshal_request(attr_val)
         return marshalled
 
     def _serialize_request(self, payload) -> str:
         """
-
         :param payload:
         :return:
         """
@@ -175,7 +179,6 @@ class GrabClient:
 
     def calculate_hash(self, data: str, url: str, headers: dict, method: str):
         """
-
         :param data:
         :param url:
         :param headers:
@@ -185,11 +188,13 @@ class GrabClient:
         client_id, secret = self.credentials
 
         h = hashlib.sha256()
-        h.update(data.encode('ascii'))
+
+        h.update(data.encode('utf-8'))
+        content_digest = base64.b64encode(h.digest()).decode()
         string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
-            'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
+            'Date'] + '\n' + url + '\n' + content_digest + '\n'
 
         hmac_signature = hmac.new(secret.encode(), string_to_sign.encode(), hashlib.sha256).digest()
         hmac_signature_encoded: object = base64.b64encode(hmac_signature)
 
-        return f'{client_id}:{hmac_signature_encoded}'
+        return f'{client_id}:{hmac_signature_encoded.decode()}'
