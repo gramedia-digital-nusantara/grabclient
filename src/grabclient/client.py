@@ -78,13 +78,12 @@ class GrabClient:
         try:
             http_response = requests.get(
                 f"{self.base_url}{url_path}",
-                headers=headers
+                headers=headers,
+                timeout=5
             )
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
-        except Exception as e:
-            raise Exception from e
         except requests.RequestException as e:
             raise APINotContactable from e
         except ValueError as e:
@@ -106,7 +105,8 @@ class GrabClient:
             http_response = requests.post(
                 f"{self.base_url}{url_path}",
                 headers=headers,
-                data=data
+                data=data,
+                timeout=5
             )
             if http_response.status_code != HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
@@ -128,13 +128,12 @@ class GrabClient:
         try:
             http_response = requests.delete(
                 f"{self.base_url}{url_path}",
-                headers=headers
+                headers=headers,
+                timeout=5
             )
             if http_response.status_code is not HTTPStatus.NO_CONTENT:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return http_response
-        except Exception as e:
-            raise Exception from e
         except requests.RequestException as e:
             raise APINotContactable from e
         except ValueError as e:
