@@ -73,7 +73,7 @@ class APIErrorResponse(GrabClientExceptionBase):
                 ).get('arg', '')
                 message_regex_match = re.match(r'^\S+(?P<CODE>.\d*).\W+\S*:\s+(?P<REASON>.*)', raw_message)
                 message = message_regex_match.group('REASON')
-            except JSONDecodeError as e:
+            except (JSONDecodeError, AttributeError) as e:
                 message = ''
             return cls(
                 message=message,
