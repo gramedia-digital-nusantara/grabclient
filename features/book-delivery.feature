@@ -8,17 +8,17 @@ Feature: Delivery Scheduling
   Scenario: Request Serialization
     Given a simulated DeliveryRequest request
     When I serialize the request
-    Then the request is serialized correctly for /deliveries
+    Then the request is serialized correctly for /v1/deliveries
 
   Scenario: Response Deserialization
-    Given a simulated response from /deliveries
+    Given a simulated response from /v1/deliveries
     When I deserialize the response as DeliveryResponse
     Then the response is deserialized correctly for a DeliveryResponse
 
   Scenario: Book Delivery via Client
     Given a production API client
-    And a simulated response from /deliveries
+    And a simulated response from /v1/deliveries
     When I perform book delivery
     Then the request is a POST made to https://api.grab.com/v1/deliveries
-    And the request credentials for POST mode are set properly to /deliveries
+    And the request credentials for POST mode are set properly to /v1/deliveries
     And the response is deserialized correctly for a DeliveryResponse

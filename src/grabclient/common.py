@@ -51,8 +51,8 @@ class Package(NamedTuple):
     price: int
     currency: Currency
     dimensions: Dimensions
-    insurance_value: int = 0
-    insurance_type: InsuranceType = InsuranceType.basic
+    # insurance_value: int = 0
+    # insurance_type: InsuranceType = InsuranceType.basic
 
 
 class DestinationClass(NamedTuple):
