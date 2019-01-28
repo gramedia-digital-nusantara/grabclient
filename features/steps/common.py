@@ -21,7 +21,7 @@ class SimulationType(Enum):
 
 
 SIMULATED_JSON = {
-    '/deliveries/quotes': {
+    '/v1/deliveries/quotes': {
         SimulationType.response: {
             "quotes": [
                 {
@@ -52,8 +52,8 @@ SIMULATED_JSON = {
                     "description": "string",
                     "quantity": 0,
                     "price": 0,
-                    "insuranceValue": 0,
-                    "insuranceType": "BASIC",
+                    # "insuranceValue": 0,
+                    # "insuranceType": "BASIC",
                     "currency": {
                         "code": "SGD",
                         "symbol": "string",
@@ -93,8 +93,8 @@ SIMULATED_JSON = {
                     "description": "string",
                     "quantity": 0,
                     "price": 0,
-                    "insuranceValue": 0,
-                    "insuranceType": "BASIC",
+                    # "insuranceValue": 0,
+                    # "insuranceType": "BASIC",
                     "currency": {
                         "code": "SGD",
                         "symbol": "string",
@@ -128,7 +128,7 @@ SIMULATED_JSON = {
             }
         }
     },
-    '/deliveries': {
+    '/v1/deliveries': {
         SimulationType.request: {
             "merchantOrderID": "string",
             "serviceType": "INSTANT",
@@ -297,7 +297,7 @@ SIMULATED_JSON = {
             }
         }
     },
-    '/deliveries/string': {
+    '/v1/deliveries/string': {
         SimulationType.response: {
             "deliveryID": "string",
             "merchantOrderID": "string",
@@ -490,13 +490,16 @@ def step_impl(context: Context, method: str, url: str) -> None:
     headers = call[1]['headers']
     auth = headers['Authorization']
     h = hashlib.sha256()
-    h.update(call[1].get('data', '').encode('ascii'))
+
+    h.update(call[1].get('data', '').encode('utf-8'))
+    content_digest = base64.b64encode(h.digest()).decode()
     string_to_sign = method + '\n' + headers['Content-Type'] + '\n' + headers[
-        'Date'] + '\n' + url + '\n' + base64.b64encode(h.digest()).decode() + '\n'
+        'Date'] + '\n' + url + '\n' + content_digest + '\n'
 
     hmac_signature = hmac.new('secret'.encode(), string_to_sign.encode(), hashlib.sha256).digest()
     hmac_signature_encoded: object = base64.b64encode(hmac_signature)
-    assert f'client_id:{hmac_signature_encoded}' == auth
+
+    assert f'client_id:{hmac_signature_encoded.decode()}' == auth
 
 
 @when('I serialize the request')
