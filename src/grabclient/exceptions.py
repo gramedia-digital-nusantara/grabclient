@@ -67,12 +67,16 @@ class APIErrorResponse(GrabClientExceptionBase):
     def from_api_json(cls, http_response: Response):
         mapped_exception = HTTPStatusMap.get(http_response.status_code, None)
         if mapped_exception:
+            message = ''
             try:
                 raw_message = json.loads(
                     http_response.content.decode('utf-8')
                 ).get('arg', '')
                 message_regex_match = re.match(r'^\S+(?P<CODE>.\d*).\W+\S*:\s+(?P<REASON>.*)', raw_message)
-                message = message_regex_match.group('REASON')
+                if message_regex_match:
+                    message = message_regex_match.group('REASON')
+                else:
+                    message = raw_message
             except (JSONDecodeError, AttributeError) as e:
                 message = ''
             return cls(
