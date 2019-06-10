@@ -5,13 +5,15 @@ from grabclient.common import Origin, Package, Destination, ServiceType, CashOnD
 
 class DeliveryQuoteRequest:
     __slots__ = (
-        'packages', 'origin', 'destination'
+        'service_type', 'packages', 'origin', 'destination'
     )
 
     def __init__(self,
+                 service_type: ServiceType,
                  packages: List[Package],
                  origin: Origin,
                  destination: Destination):
+        self.service_type = service_type
         self.origin = origin
         self.destination = destination
         self.packages = packages

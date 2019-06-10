@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 from behave import given, when, then
 from requests import Response
 
-from grabclient import DeliveryQuoteRequest, Origin, Destination, Coordinates, GrabClient, Package, Currency, Dimensions
+from grabclient import DeliveryQuoteRequest, Origin, Destination, Coordinates, GrabClient, Package, Currency, \
+    Dimensions, ServiceType
 
 
 @then("the response is deserialized correctly for a DeliveryQuote")
@@ -17,6 +18,7 @@ def step_impl(context):
 @given('a simulated DeliveryQuoteRequest request')
 def step_impl(context):
     context.simulated_request = DeliveryQuoteRequest(
+        service_type=ServiceType.same_day,
         packages=[],
         origin=Origin(address='Full address of origin',
                       keywords='Extra keywords',
@@ -39,6 +41,7 @@ def step_impl(context):
 
     context.response = client.check_rate(
         DeliveryQuoteRequest(
+            service_type=ServiceType.same_day,
             packages=[Package(name="string",
                               description="string",
                               quantity=0,
