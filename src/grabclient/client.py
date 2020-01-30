@@ -39,15 +39,15 @@ class GrabClient:
 
         :return:
         """
-        return 'https://api.stg-myteksi.com' if self.sandbox_mode else 'https://api.grab.com'
+        return 'https://partner-api.stg-myteksi.com' if self.sandbox_mode else 'https://partner-api.grab.com'
 
     def check_rate(self, req: DeliveryQuoteRequest) -> DeliveryQuoteResponse:
         """POST /deliveries/quotes"""
-        return self._http_post_json('/v1/deliveries/quotes', req, DeliveryQuoteResponse)
+        return self._http_post_json('/grab-express/v1/deliveries/quotes', req, DeliveryQuoteResponse)
 
     def book_delivery(self, req: DeliveryRequest) -> DeliveryResponse:
         """Booking API: POST /deliveries"""
-        return self._http_post_json('/v1/deliveries', req, DeliveryResponse)
+        return self._http_post_json('/grab-express/v1/deliveries', req, DeliveryResponse)
 
     def track_delivery(self):
         """Tracking API: GET /deliveries/{deliveryID}/tracking tyg"""
@@ -55,11 +55,11 @@ class GrabClient:
 
     def cancel_delivery(self, delivery_id: str):
         """Cancel API: /deliveries/{deliveryID}"""
-        return self._http_delete_json(f'/v1/deliveries/{delivery_id}')
+        return self._http_delete_json(f'/grab-express/v1/deliveries/{delivery_id}')
 
     def info_delivery(self, delivery_id: str) -> DeliveryResponse:
         """GET deliveries/{DeliveryID}"""
-        return self._http_get_json(f'/v1/deliveries/{delivery_id}', DeliveryResponse)
+        return self._http_get_json(f'/grab-express/v1/deliveries/{delivery_id}', DeliveryResponse)
 
     def _headers(self):
         return {
