@@ -6,6 +6,7 @@ from collections import namedtuple
 from datetime import datetime
 from enum import Enum
 from http import HTTPStatus
+from logging import getLogger
 from typing import Tuple, Union, TypeVar, Type
 
 import requests
@@ -18,6 +19,8 @@ from grabclient.responses import DeliveryQuoteResponse, DeliveryResponse
 __all__ = ['GrabClient', ]
 
 T = TypeVar('T')
+
+_log = getLogger()
 
 
 class GrabClient:
@@ -76,11 +79,13 @@ class GrabClient:
         headers['Content-Type'] = ""
         headers['Authorization'] = self.calculate_hash('', url_path, headers, 'GET')
         try:
+            url = f"{self.base_url}{url_path}"
             http_response = requests.get(
-                f"{self.base_url}{url_path}",
+                url,
                 headers=headers,
                 timeout=5
             )
+            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.status_code} {http_response.text}')
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
@@ -102,12 +107,14 @@ class GrabClient:
         data = self._serialize_request(payload)
         headers['Authorization'] = self.calculate_hash(data, url_path, headers, 'POST')
         try:
+            url = f"{self.base_url}{url_path}"
             http_response = requests.post(
-                f"{self.base_url}{url_path}",
+                url,
                 headers=headers,
                 data=data,
                 timeout=5
             )
+            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.status_code} {http_response.text}')
             if http_response.status_code != HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
@@ -126,11 +133,13 @@ class GrabClient:
         headers['Content-Type'] = ""
         headers['Authorization'] = self.calculate_hash('', url_path, headers, 'DELETE')
         try:
+            url = f"{self.base_url}{url_path}"
             http_response = requests.delete(
-                f"{self.base_url}{url_path}",
+                url,
                 headers=headers,
                 timeout=5
             )
+            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.status_code} {http_response.text}')
             if http_response.status_code is not HTTPStatus.NO_CONTENT:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return http_response
