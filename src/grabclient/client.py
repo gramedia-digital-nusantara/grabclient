@@ -85,7 +85,7 @@ class GrabClient:
                 headers=headers,
                 timeout=5
             )
-            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.text}')
+            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.status_code} {http_response.text}')
             if http_response.status_code is not HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
@@ -114,7 +114,7 @@ class GrabClient:
                 data=data,
                 timeout=5
             )
-            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.text}')
+            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.status_code} {http_response.text}')
             if http_response.status_code != HTTPStatus.OK:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return response_class.from_api_json(http_response.json())
@@ -139,7 +139,7 @@ class GrabClient:
                 headers=headers,
                 timeout=5
             )
-            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.text}')
+            _log.info(f'{datetime.now().isoformat()}: GRAB {url} {http_response.status_code} {http_response.text}')
             if http_response.status_code is not HTTPStatus.NO_CONTENT:
                 raise APIErrorResponse.from_api_json(http_response=http_response)
             return http_response
